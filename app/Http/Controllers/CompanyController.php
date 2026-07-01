@@ -15,6 +15,17 @@ class CompanyController extends Controller
 
     public function show(Company $company)
     {
+        $user = auth()->user();
+
+        if (
+            !$company->is_approved &&
+            (!$user || ($user->role !== 'admin' && $company->user_id != $user->id))
+        ) {
+            return response()->json([
+                'message' => 'Компания еще не подтверждена'
+            ], 403);
+        }
+
         return $company->load(
             "categories",
             "package",
@@ -59,6 +70,20 @@ class CompanyController extends Controller
 
     public function update(Request $request, Company $company)
     {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Необходима авторизация'
+            ], 401);
+        }
+
+        if ($user->role !== 'admin' && $company->user_id != $user->id) {
+            return response()->json([
+                'message' => 'Доступ запрещен'
+            ], 403);
+        }
+
         $company->update($request->all());
 
         return response()->json([
@@ -69,10 +94,44 @@ class CompanyController extends Controller
 
     public function destroy(Company $company)
     {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Необходима авторизация'
+            ], 401);
+        }
+
+        if ($user->role !== 'admin' && $company->user_id != $user->id) {
+            return response()->json([
+                'message' => 'Доступ запрещен'
+            ], 403);
+        }
+
         $company->delete();
 
         return response()->json([
             "message" => "Компания удалена"
+        ]);
+    }
+
+    public function approve(Company $company)
+    {
+        $user = auth()->user();
+
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Доступ запрещен'
+            ], 403);
+        }
+
+        $company->update([
+            'is_approved' => true
+        ]);
+
+        return response()->json([
+            'message' => 'Компания успешно подтверждена',
+            'company' => $company
         ]);
     }
 }

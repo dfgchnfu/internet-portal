@@ -11,7 +11,7 @@ class ApiTokenMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->header('Authorization');
+        $token = $request->bearerToken();
 
         if (!$token) {
             return response()->json([
@@ -26,8 +26,6 @@ class ApiTokenMiddleware
                 'message' => 'Неверный токен'
             ], 401);
         }
-
-        auth()->login($user);
 
         return $next($request);
     }

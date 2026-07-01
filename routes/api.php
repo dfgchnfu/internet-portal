@@ -8,6 +8,11 @@ Route::post('login', [UserController::class, 'login']);
 
 Route::middleware('apitoken')->group(function () {
 
+    Route::patch(
+        'companies/{company}/approve',
+        [CompanyController::class, 'approve']
+    );
+
     Route::apiResource(
         'companies',
         CompanyController::class
